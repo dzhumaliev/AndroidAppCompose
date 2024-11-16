@@ -6,6 +6,13 @@ import android.os.Bundle
 import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,15 +59,39 @@ class MainActivity : ComponentActivity() {
 fun MyApp() {
     val navController = rememberNavController()
     // Создаём NavHost и определяем маршруты
-    NavHost(navController = navController, startDestination = "main_screen") {
+    NavHost(
+        navController = navController,
+        startDestination = "main_screen",
+    ) {
+
+
 //        composable("main_screen") { MainScreen(navController) }
 //        composable("detail_screen") { DetailScreen(navController) }
-
 
         composable("main_screen") { MainScreen(navController) }
         composable(
             route = "detail_screen/{message}",
-            arguments = listOf(navArgument("message") { defaultValue = "Нет сообщения" })
+            arguments = listOf(navArgument("message") { defaultValue = "Нет сообщения" }),
+            enterTransition = {
+                fadeIn(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideIntoContainer(
+                    animationSpec = tween(300, easing = EaseIn),
+                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    animationSpec = tween(
+                        300, easing = LinearEasing
+                    )
+                ) + slideOutOfContainer(
+                    animationSpec = tween(300, easing = EaseOut),
+                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                )
+            }
         ) { backStackEntry ->
             // Получаем значение аргумента
             val message = backStackEntry.arguments?.getString("message") ?: "Нет данных"
