@@ -3,6 +3,7 @@
 package com.kg.androidappcompose
 
 import android.os.Bundle
+import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -17,8 +18,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +36,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
@@ -64,6 +71,9 @@ fun MyApp() {
 
 @Composable
 fun MainScreen(navController: NavHostController) {
+
+    var text by remember { mutableStateOf("") }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Главный экран") })
@@ -73,14 +83,23 @@ fun MainScreen(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.Blue)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
             Text(text = "Добро пожаловать на главный экран!")
             Spacer(modifier = Modifier.height(16.dp))
+            TextField(
+                value = text,
+                onValueChange = { newText ->
+                    text = newText
+                },
+                label = { Text("Текстовое поле") },
+                placeholder = { Text("Введите что-нибудь...") },
+                singleLine = true
+            )
+
             Button(onClick = {
-                navController.navigate("detail_screen/Привет из MainScreen!")
+                navController.navigate("detail_screen/$text")
             }) {
                 Text("Перейти на следующий экран")
             }
@@ -99,7 +118,6 @@ fun DetailScreen(navController: NavHostController, message: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.Red)
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
