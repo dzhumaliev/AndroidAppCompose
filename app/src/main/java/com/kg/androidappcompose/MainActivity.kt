@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.widget.EditText
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.EaseOut
@@ -13,7 +14,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-//        enableEdgeToEdge()
+        enableEdgeToEdge()
         setContent {
             MyTheme {
                 MyApp()
@@ -63,10 +65,6 @@ fun MyApp() {
         navController = navController,
         startDestination = "main_screen",
     ) {
-
-
-//        composable("main_screen") { MainScreen(navController) }
-//        composable("detail_screen") { DetailScreen(navController) }
 
         composable("main_screen") { MainScreen(navController) }
         composable(
@@ -101,9 +99,10 @@ fun MyApp() {
 }
 
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, viewModel: MainViewModel = viewModel()) {
 
-    var text by remember { mutableStateOf("") }
+    var enterText by remember { mutableStateOf("") }
+    val text by viewModel.text.collectAsState()
 
     Scaffold(
         topBar = {
@@ -117,20 +116,23 @@ fun MainScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = "Добро пожаловать на главный экран!")
+            Text(text = text)
             Spacer(modifier = Modifier.height(16.dp))
             TextField(
-                value = text,
+                value = enterText,
                 onValueChange = { newText ->
-                    text = newText
+                    enterText = newText
+                    viewModel.updateText(newText)
                 },
                 label = { Text("Текстовое поле") },
                 placeholder = { Text("Введите что-нибудь...") },
-                singleLine = true
+                singleLine = true,
+
             )
 
             Button(onClick = {
-                navController.navigate("detail_screen/$text")
+                navController.navigate("detail_screen/$enterText")
+                viewModel.changeTextWithDelay()
             }) {
                 Text("Перейти на следующий экран")
             }
@@ -174,5 +176,5 @@ fun MyTheme(content: @Composable () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-
+    MyApp()
 }
