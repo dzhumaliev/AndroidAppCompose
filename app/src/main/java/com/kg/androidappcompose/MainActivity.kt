@@ -14,12 +14,18 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +52,7 @@ import androidx.navigation.navArgument
 
 class MainActivity : ComponentActivity() {
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,6 +66,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MyApp() {
+
+    val detailViewModel: DetailViewModel = viewModel()
     val navController = rememberNavController()
     // Создаём NavHost и определяем маршруты
     NavHost(
@@ -66,10 +75,10 @@ fun MyApp() {
         startDestination = "main_screen",
     ) {
 
-        composable("main_screen") { MainScreen(navController) }
+        composable("main_screen") { MainScreen(navController, detailViewModel = detailViewModel) }
         composable(
-            route = "detail_screen/{message}",
-            arguments = listOf(navArgument("message") { defaultValue = "Нет сообщения" }),
+            route = "detail_screen",
+//            arguments = listOf(navArgument("message") { defaultValue = "Нет сообщения" }),
             enterTransition = {
                 fadeIn(
                     animationSpec = tween(
@@ -93,13 +102,17 @@ fun MyApp() {
         ) { backStackEntry ->
             // Получаем значение аргумента
             val message = backStackEntry.arguments?.getString("message") ?: "Нет данных"
-            DetailScreen(navController, message)
+            DetailScreen(navController, viewModel = detailViewModel)
         }
     }
 }
 
 @Composable
-fun MainScreen(navController: NavHostController, viewModel: MainViewModel = viewModel()) {
+fun MainScreen(
+    navController: NavHostController,
+    viewModel: MainViewModel = viewModel(),
+    detailViewModel: DetailViewModel
+) {
 
     var enterText by remember { mutableStateOf("") }
     val text by viewModel.text.collectAsState()
@@ -128,10 +141,11 @@ fun MainScreen(navController: NavHostController, viewModel: MainViewModel = view
                 placeholder = { Text("Введите что-нибудь...") },
                 singleLine = true,
 
-            )
+                )
 
             Button(onClick = {
-                navController.navigate("detail_screen/$enterText")
+                detailViewModel.addText(enterText)
+                navController.navigate("detail_screen")
                 viewModel.changeTextWithDelay()
             }) {
                 Text("Перейти на следующий экран")
@@ -141,29 +155,55 @@ fun MainScreen(navController: NavHostController, viewModel: MainViewModel = view
 }
 
 @Composable
-fun DetailScreen(navController: NavHostController, message: String) {
+fun DetailScreen(navController: NavHostController, viewModel: DetailViewModel) {
+
+    val savedTexts = viewModel.savedTexts
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Детальный экран") })
         }
     ) { paddingValues ->
+
+//        Box(modifier = Modifier.fillMaxSize()) {
+//
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
+                .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            Text(text = "Сообщение: $message")
+
+            LazyColumn(
+                modifier = Modifier
+                    .background(Color.Red)
+                    .size(400.dp)
+            ) {
+                items(savedTexts) { text ->
+                    Text(
+                        text = text,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = {
-                navController.popBackStack()
-            }) {
+            Button(
+                onClick = {
+                    navController.popBackStack()
+                }, modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
                 Text("Вернуться назад")
             }
         }
     }
 }
+//}
 
 @Composable
 fun MyTheme(content: @Composable () -> Unit) {
